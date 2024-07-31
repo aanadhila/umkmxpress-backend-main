@@ -1,0 +1,625 @@
+@extends('layouts.app')
+@section('title', 'Clusters')
+@section('page-title')
+    <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
+        <h1 class="page-heading d-flex text-dark fw-bold flex-column justify-content-center my-0">
+            Pemetaan Wilayah (Kluster)
+        </h1>
+    </div>
+@endsection
+@section('content')
+    <div class="card card-docs flex-row-fluid mb-5">
+        <div class="card-header d-flex justify-content-between">
+            <div class="card-title align-items-start flex-column">
+                <span class="svg-icon svg-icon-1 position-absolute ms-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546" height="2" rx="1" transform="rotate(45 17.0365 15.1223)" fill="currentColor" />
+                        <path
+                            d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
+                            fill="currentColor" />
+                    </svg>
+                </span>
+                <input type="search" name="search" class="form-control form-control-solid ps-15 w-lg-250px w-150px" id="search1" placeholder="Cari.." />
+            </div>
+            <div class="card-toolbar">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClusterModal">
+                    +Cluster
+                </button>
+            </div>
+        </div>
+        <div class="card-body pt-0">
+            <table id="clusters-table" class="table align-middle table-row-dashed fs-6 gy-5">
+                <thead>
+                    <tr class="fw-semibold text-muted">
+                        <th>No</th>
+                        <th>Cluster</th>
+                        <th>Cakupan</th>
+                        <th class="text-center">Tarif Same Day</th>
+                        <th class="text-center">Tarif Instant Courier</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="fw-semibold text-gray-600">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="modal fade" tabindex="-1" id="addClusterModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="addClusterForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header">
+                        <h3 class="modal-title w-100 text-center">Tambah Cluster</h3>
+                        <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                            <span class="svg-icon svg-icon-1"><i class="bi bi-x-lg"></i></span>
+                        </div>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-5">
+                            <label for="name" class="required form-label">Cluster</label>
+                            <input type="text" name="name" id="name" class="form-control" placeholder="Masukkan nama cluster" required />
+                        </div>
+                        <div class="mb-5">
+                            <label for="city_id" class="required form-label">Kota / Kabupaten Cakupan</label>
+                            <select name="city_id" class="form-control form-select" id="city_id" data-control="select2">
+                            </select>
+                        </div>
+                        <div class="mb-5">
+                            <label for="subdistrict_id" class="required form-label">Kecamatan Cakupan</label>
+                            <select name="subdistrict_id[]" class="form-control form-select" id="subdistrict_id">
+                            </select>
+                        </div>
+                        <div class="mb-5">
+                            <label for="next_day_cost" class="required form-label">Tarif Same Day</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="Rp">Rp</span>
+                                <input type="text" name="next_day_cost" id="next_day_cost" class="form-control" placeholder="Masukkan tarif" aria-label="cluster" aria-describedby="Rp" required />
+                            </div>
+                        </div>
+                        <div class="mb-5">
+                            <label for="instant_courier_cost" class="required form-label">Tarif Instant Courier</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="Rp">Rp</span>
+                                <input type="text" name="instant_courier_cost" id="instant_courier_cost" class="form-control" placeholder="Masukkan tarif" aria-label="cluster" aria-describedby="Rp" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="reset" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary me-10" id="btn_add_courier">
+                            <span class="indicator-label">
+                                Simpan
+                            </span>
+                            <span class="indicator-progress">
+                                Tunggu <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" tabindex="-1" id="editClusterModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editClusterForm" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="cluster_id" id="edit_cluster_id">
+                    <div class="modal-header">
+                        <h3 class="modal-title w-100 text-center">Edit Cluster</h3>
+                        <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                            <span class="svg-icon svg-icon-1"><i class="bi bi-x-lg"></i></span>
+                        </div>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-5">
+                            <label for="name" class="required form-label">Cluster</label>
+                            <input type="text" name="name" id="edit_name" class="form-control" placeholder="Masukkan nama cluster" required />
+                        </div>
+                        <div class="mb-5">
+                            <label for="next_day_cost" class="required form-label">Tarif Same Day</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="Rp">Rp</span>
+                                <input type="text" name="next_day_cost" id="edit_next_day_cost" class="form-control" placeholder="Masukkan tarif" aria-label="cluster" aria-describedby="Rp" required />
+                            </div>
+                        </div>
+                        <div class="mb-5">
+                            <label for="instant_courier_cost" class="required form-label">Tarif Instant Courier</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="Rp">Rp</span>
+                                <input type="text" name="instant_courier_cost" id="edit_instant_courier_cost" class="form-control" placeholder="Masukkan tarif" aria-label="cluster" aria-describedby="Rp" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="reset" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary me-10" id="btn_edit_cluster">
+                            <span class="indicator-label">
+                                Simpan
+                            </span>
+                            <span class="indicator-progress">
+                                Tunggu <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" tabindex="-1" id="clusterCoverageModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title w-100 text-center">Cakupan Cluster "<span id="clusterName"></span>"</h3>
+                    <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                        <span class="svg-icon svg-icon-1"><i class="bi bi-x-lg"></i></span>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <table id="coverages-table" class="table align-middle table-row-dashed fs-6 gy-5">
+                        <thead>
+                            <tr class="fw-semibold text-muted">
+                                <th style="text-align:center;">No</th>
+                                <th style="text-align:left;">Kecamatan</th>
+                                <th style="">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-semibold text-gray-600" style="">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="reset" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" tabindex="-1" id="clusterMapModal">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title w-100 text-center">Peta Cluster "<span id="clusterMapName"></span>"</h3>
+                    <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                        <span class="svg-icon svg-icon-1"><i class="bi bi-x-lg"></i></span>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div id="clusterMap" style="width: 100%; height: 500px;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="reset" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+@push('js')
+    <script>
+        var im = new Inputmask({
+            alias: 'numeric',
+            groupSeparator: '.',
+            radixPoint: ','
+        });
+
+        var selected = [];
+
+        var datatable = $('#clusters-table').DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            stateSave: false,
+            ajax: {
+                url: '{!! url()->current() !!}',
+                data: {
+                    table: 'cluster',
+                },
+            },
+            columns: [{
+                    data: 'DT_RowIndex',
+                    name: 'DT_RowIndex',
+                    orderable: true,
+                    searchable: true,
+                    width: '5'
+                },
+                {
+                    data: 'name',
+                    name: 'name',
+                    orderable: true,
+                    searchable: true,
+                    width: '10'
+                },
+                {
+                    data: 'coverages',
+                    name: 'coverages',
+                    orderable: true,
+                    searchable: true,
+                    width: 15,
+                },
+                {
+                    data: 'next_day_cost',
+                    name: 'next_day_cost',
+                    orderable: true,
+                    searchable: true,
+                    width: '15',
+                    className: 'text-center'
+                },
+                {
+                    data: 'instant_courier_cost',
+                    name: 'instant_courier_cost',
+                    orderable: true,
+                    searchable: true,
+                    width: '15',
+                    className: 'text-center'
+                },
+                {
+                    data: 'actions',
+                    name: 'actions',
+                    orderable: false,
+                    searchable: false,
+                    width: '5',
+                    className: 'text-center'
+                },
+            ],
+            order: [
+                [0, "asc"]
+            ]
+        });
+
+        $('#search1').on('keyup', function() {
+            datatable.search(this.value).draw();
+        });
+
+        $(function() {
+            im.mask('#next_day_cost,#instant_courier_cost');
+            $('#city_id').select2({
+                ajax: {
+                    url: "{{ route('dropdown.cities') }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        var query = {
+                            search: params.term,
+                        }
+                        return query;
+                    },
+                },
+                placeholder: 'Pilih kota / kabupaten cakupan',
+                dropdownParent: $("#addClusterModal"),
+                width: '100%'
+            });
+
+            $('#subdistrict_id').select2({
+                placeholder: 'Pilih kota / kabupaten cakupan terlebih dahulu!'
+            });
+        })
+
+        $('#city_id').on('change', function() {
+            var city_id = $(this).val();
+            $('#subdistrict_id').val('');
+            $('#subdistrict_id').trigger('change');
+            $('#subdistrict_id').select2({
+                multiple: true,
+                ajax: {
+                    url: "{{ route('dropdown.subdistricts') }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        var query = {
+                            search: params.term,
+                            city_id: city_id,
+                            multiple: true,
+                            cluster: true,
+                        }
+                        return query;
+                    },
+                    success: async function(data) {
+                        // selected = data;
+                        // selected.shift();
+                    }
+                },
+                placeholder: 'Pilih kecamatan cakupan',
+                dropdownParent: $("#addClusterModal"),
+                width: '100%',
+                allowClear: true,
+                cache: true,
+            });
+        });
+
+        $('#addClusterForm').on('submit', function(e) {
+            e.preventDefault();
+            $(this).find("button[type='submit']").prop('disabled', true);
+            $(this).find("button[type='submit']").attr('data-kt-indicator', 'on');
+            $.ajax({
+                url: "{{ route('clusters.store') }}",
+                type: 'POST',
+                dataType: 'JSON',
+                processData: false,
+                contentType: false,
+                cache: false,
+                data: new FormData(this),
+                error: function(data) {
+                    toastr.error(data.responseJSON.message, 'Error');
+                },
+                success: function(data) {
+                    toastr.success(data.message, 'Sukses');
+                    $('#addClusterModal').modal('toggle');
+                    $('#name').val('');
+                    $('#next_day_cost').val('');
+                    $('#instant_courier_cost').val('');
+                    $('#subdistrict_id').val(null).trigger('change');
+                    $('#city_id').val(null).trigger('change');
+                    datatable.ajax.reload();
+                }
+            });
+            $(this).find("button[type='submit']").prop('disabled', false);
+            $(this).find("button[type='submit']").attr('data-kt-indicator', 'off');
+        });
+
+        $(document).on('click', '#editCluster', function(e) {
+            var id = $(this).data('id');
+            var url = "{{ route('clusters.edit', ':id') }}";
+            $.ajax({
+                url: url.replace(':id', id),
+                type: 'GET',
+                dataType: 'JSON',
+                processData: false,
+                contentType: false,
+                cache: false,
+                error: function(data) {
+                    toastr.error(data.responseJSON.message, 'Error');
+                },
+                success: function(data) {
+                    $('#edit_cluster_id').val(data.id);
+                    $('#edit_name').val(data.name);
+                    $('#edit_next_day_cost').val(data.next_day_cost);
+                    $('#edit_instant_courier_cost').val(data.instant_courier_cost);
+                }
+            });
+        });
+
+        $('#editClusterForm').on('submit', function(e) {
+            e.preventDefault();
+            var id = $('#edit_cluster_id').val();
+            var url = "{{ route('clusters.update', ':id') }}";
+            $('#btn_edit_cluster').prop('disabled', true);
+            $('#btn_edit_cluster').attr("data-kt-indicator", "on");
+            $.ajax({
+                url: url.replace(':id', id),
+                type: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                dataType: "JSON",
+                processData: false,
+                contentType: false,
+                cache: false,
+                data: new FormData(this),
+                error: function(data) {
+                    toastr.error(data.responseJSON.message, 'Error');
+                },
+                success: function(data) {
+                    toastr.success(data.message, 'Sukses');
+                    $('#editClusterModal').modal('toggle');
+                    datatable.ajax.reload();
+                }
+            });
+            $('#btn_edit_cluster').prop('disabled', false);
+            $('#btn_edit_cluster').removeAttr("data-kt-indicator");
+        });
+
+        $('#addSpecialClusterForm').on('submit', function(e) {
+            e.preventDefault();
+            $(this).find("button[type='submit']").prop('disabled', true);
+            $(this).find("button[type='submit']").attr('data-kt-indicator', 'on');
+            $.ajax({
+                url: "{{ route('specials.store') }}",
+                type: 'POST',
+                dataType: 'JSON',
+                processData: false,
+                contentType: false,
+                cache: false,
+                data: new FormData(this),
+                error: function(data) {
+                    toastr.error(data.responseJSON.message, 'Error');
+                },
+                success: function(data) {
+                    toastr.success(data.message, 'Sukses');
+                    $('#addSpecialClusterModal').modal('toggle');
+                    $('#addSpecialClusterForm').trigger('reset');
+                    datatable2.ajax.reload();
+                }
+            });
+            $(this).find("button[type='submit']").prop('disabled', false);
+            $(this).find("button[type='submit']").attr('data-kt-indicator', 'off');
+        });
+
+        $(document).on("click", "#deleteClusterConfirm", function(e) {
+            e.preventDefault();
+            Swal.fire({
+                customClass: {
+                    confirmButton: 'bg-danger',
+                },
+                title: 'Apakah anda yakin?',
+                text: "Apakah anda yakin ingin menghapus data ini?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Delete'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    e.preventDefault();
+                    var id = $(this).data("id");
+                    var route = "{{ route('clusters.destroy', ':id') }}";
+                    $.ajax({
+                        url: route.replace(':id', id),
+                        type: 'DELETE',
+                        data: {
+                            _token: $("meta[name='csrf-token']").attr("content"),
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                title: 'Success',
+                                text: response.message,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                timer: 1000,
+                                timerProgressBar: true,
+                            })
+                            datatable.ajax.reload();
+                        },
+                        error: function(data) {
+                            toastr.error(data.responseJSON.message, 'Error');
+                        }
+                    });
+                }
+            });
+        });
+
+        var datatable2;
+
+        $(document).on('click', '#showCoverages', function() {
+            if (datatable2 instanceof $.fn.dataTable.Api) {
+                datatable2.destroy();
+            }
+            $('#clusterName').text($(this).data('name'));
+            datatable2 = $('#coverages-table').DataTable({
+                processing: true,
+                serverSide: true,
+                ordering: true,
+                stateSave: false,
+                ajax: {
+                    url: "{{ route('coverages.index') }}",
+                    data: {
+                        cluster_id: $(this).data('id'),
+                    },
+                },
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: true,
+                        searchable: true,
+                        width: '5'
+                    },
+                    {
+                        data: 'subdistrict_id',
+                        name: 'subdistrict_id',
+                        orderable: true,
+                        searchable: true,
+                        width: '10'
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        width: '10',
+                        className: 'text-center'
+                    },
+                ],
+                order: [
+                    [0, "asc"]
+                ]
+            });
+        });
+
+        $(document).on("click", "#deleteCoverageConfirm", function(e) {
+            e.preventDefault();
+            Swal.fire({
+                customClass: {
+                    confirmButton: 'bg-danger',
+                },
+                title: 'Apakah anda yakin?',
+                text: "Apakah anda yakin ingin menghapus data cakupan " + $(this).data('name') + "?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Delete'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    e.preventDefault();
+                    var id = $(this).data("id");
+                    var route = "{{ route('coverages.destroy', ':id') }}";
+                    $.ajax({
+                        url: route.replace(':id', id),
+                        type: 'DELETE',
+                        data: {
+                            _token: $("meta[name='csrf-token']").attr("content"),
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                title: 'Success',
+                                text: response.message,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                timer: 1000,
+                                timerProgressBar: true,
+                            })
+                            datatable2.ajax.reload();
+                        },
+                        error: function(data) {
+                            toastr.error(data.responseJSON.message, 'Error');
+                        }
+                    });
+                }
+            });
+        });
+
+        var map;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('clusterMap'), {
+                zoom: 12,
+                center: {
+                    lat: -7.968376,
+                    lng: 112.632354,
+                },
+                streetViewControl: false,
+            });
+        }
+
+        $(document).on('click', '#showCoveragesMap', function() {
+            $('#clusterMapName').text($(this).data('name'));
+            map = new google.maps.Map(document.getElementById('clusterMap'), {
+                zoom: 12,
+                center: {
+                    lat: -7.968376,
+                    lng: 112.632354,
+                },
+                streetViewControl: false,
+            });
+            const geocoder = new google.maps.Geocoder();
+            var kecamatanNames = $(this).data('coverages');
+
+            let bounds = new google.maps.LatLngBounds();
+
+            for (const address of kecamatanNames) {
+                geocoder.geocode({
+                    address: address
+                }, (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        const districtBounds = results[0].geometry.bounds;
+
+                        // Menggabungkan batas-batas kecamatan
+                        bounds.union(districtBounds);
+
+                        // Gambar batas kecamatan pada peta
+                        new google.maps.Rectangle({
+                            bounds: districtBounds,
+                            map: map,
+                            fillColor: '#AA0000',
+                            fillOpacity: 0.35,
+                            strokeColor: '#FF0000',
+                            strokeOpacity: 0.8,
+                            strokeWeight: 2
+                        });
+
+                        map.setCenter(bounds.getCenter());
+                    } else {
+                        console.error('Geocode was not successful for the following reason:', status);
+                    }
+                });
+            }
+        });
+    </script>
+    @include('components.gmaps', ['function' => 'initMap'])
+@endpush
